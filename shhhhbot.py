@@ -34,14 +34,18 @@ with con:
         if raw_input("Drop the database? (y/n) [n] ") == 'y':
             cur.execute('DROP TABLE IF EXISTS checks')
     cur.execute('CREATE TABLE IF NOT EXISTS "main"."checks" ("id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL , "since_id" INTEGER)')
-    cur.execute('INSERT INTO "main"."checks" ("since_id") VALUES (?)', (0,))
+    #cur.execute('INSERT INTO "main"."checks" ("since_id") VALUES (?)', (0,))
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 cur.execute("SELECT since_id FROM checks LIMIT 1")
-since_id = cur.fetchone()[0]
+try:
+	since_id = cur.fetchone()[0]
+except:
+	since_id = 0
+
 if ARGS.verbose > 0:
     print "since: ", since_id
 
@@ -95,7 +99,7 @@ check_rate_limit()
 if ARGS.verbose > 0:
     print "================================"
 
-results = api.search(q="but \"tell anyone\" don't OR dont", count=20, result_type="recent", since_id=since_id, include_entities=False)
+results = api.search(q="but \"tell anyone\" don't OR dont", count=1, result_type="recent", since_id=since_id, include_entities=False)
 last_id = None
 for tweet in reversed(results):
     try:
