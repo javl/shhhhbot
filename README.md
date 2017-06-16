@@ -1,3 +1,5 @@
+![shhhhbot avatar](https://raw.githubusercontent.com/javl/shhhhbot/master/img.jpg)
+
 # shhhhBot #
 
 shhhBot retweets tweets containing the phrase "don't tell anyone, but"
