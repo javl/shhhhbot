@@ -9,7 +9,7 @@ Run: `./shhhh.py`
 Optional arguments:
 
 * `-d`: drop the database
-* `-v`: verbose mode
+* `-v`: (up to 3 times) verbose mode
 
 The last seen tweet's id gets saved to `info.sqlite` so the script knows where to continue from.
 
