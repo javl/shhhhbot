@@ -8,12 +8,11 @@ try:
 except:
     print "Error loading credentials.py. See credentials.example.py"
     exit()
- 
+
 import tweepy, argparse, math, sys, os
 from datetime import datetime
 import sqlite3 as lite
 from argparse import RawTextHelpFormatter
-
 
 PARSER = argparse.ArgumentParser(prog='nawscraper', description='''Twitter NAW scraper''',
 formatter_class=RawTextHelpFormatter)
@@ -22,7 +21,7 @@ PARSER.add_argument('-d', dest="drop_database", action='store_true',\
 help="Drop the database.")
 PARSER.add_argument('-v', dest="verbose", action='count',\
 help="Verbose; can be used up to 3 times to set the verbose level.")
-PARSER.add_argument('--version', action='version', version='%(prog)s version 0.1',\
+PARSER.add_argument('--version', action='version', version='%(prog)s version 1.1',\
 help="Show program's version number and exit")
 ARGS = PARSER.parse_args()
 
@@ -105,60 +104,27 @@ ignore_words = ["sensei", "kale"]
 ignore_userdata = ["bot"]
 
 #since_id = 888300813889802240
-results = api.search(q="but \"tell anyone\" don't OR dont", count=50, result_type="recent", since_id=since_id, include_entities=False)
+# Find tweets with the sentence, excluding retweets, excluding unsafe tweets
+results = api.search(q="but \"tell anyone\" don't OR dont -filter:retweets filter:safe", count=50, result_type="recent", since_id=since_id, include_entities=False)
 last_id = None
-if ARGS.verbose > 0:
-    print "Possible tweets: ", len(results)
+if ARGS.verbose > 0: print "Number of possible tweets to use: ", len(results)
 
 for tweet in reversed(results):
-    #print "---------------------"    
-    #print "Try tweet ", tweet.id
-    #print "---------------------"    
-    # skip retweets retweets
-    try:
-        if tweet.retweeted_status:
-            if ARGS.verbose > 2:
-                print "==> Skip, retweet"
-            continue
-    except AttributeError:
-        # means retweeted_status does not exist, so we can pas
-        pass
-
-    #print "no retweet"
-    #except Exception as e:
-    #    exc_type, exc_obj, exc_tb = sys.exc_info()
-    #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    #    print(exc_type, fname, exc_tb.tb_lineno)
-    #    continue
-
-    # skip sensitive tweets (no porn)
-    try:
-        if tweet.possibly_sensitive:
-            if ARGS.verbose > 2:
-                print "Skip ==> sensitive"
-            continue
-    except AttributeError:
-        # means possible_sensitive does not exist, so we can pass
-        pass
-
-    #print "not sensitive"
     # skip tweets containing certain keywords
     try:
         if any(word in tweet.text for word in ignore_words):
             if ARGS.verbose > 0:
                 print "==========================="
-                print "Skip, ignore_words"
+                print "Skip because of keywords: "
                 print tweet.text
                 print "==========================="
             continue
     except:
         continue
 
-    #print "no ignore words"
-
     # skip tweets by users with certain keywords in name or bio
     try:
-        if any(word in tweet.user.name for word in ignore_userdata):
+        if any(word in (tweet.user.name+tweet.user.description) for word in ignore_userdata):
             if ARGS.verbose > 0:
                 print "==========================="
                 print "Skip, ignore_userdata in name"
@@ -172,34 +138,11 @@ for tweet in reversed(results):
         print "exception on ignore_userdata 1"
         continue
 
-    # skip tweets by users with certain keywords in name or bio
-    try:
-        if any(word in tweet.user.description for word in ignore_userdata):
-            if ARGS.verbose > 0:
-                print "==========================="
-                print "Skip, ignore_userdata in bio"
-                print tweet.user.name, ", ", tweet.user.description
-                print "==========================="
-            continue;
-    except AttributeError:
-        # means this data does not exist, so we can passs
-        pass
-    except Exception, e: #not sure when we'll hit this
-        print "exception on ignore_userdata 2"
-        continue
-   
-    #print "no ignore userdata"
-    #if ARGS.verbose > 0:
-    #    try:
-    #        print "tweet ==> ", tweet.text
-        #except Exception as e:
-        #    exc_type, exc_obj, exc_tb = sys.exc_info()
-        #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        #    print(exc_type, fname, exc_tb.tb_lineno)
-    #    except:
-    #        print "some exception in the end"
-    #        continue
-    
+    if ARGS.verbose > 0:
+        print "selected tweet from",tweet.user.name
+        print tweet.text
+        break
+
     try:
         api.retweet(tweet.id)
         last_id = tweet.id
