@@ -161,7 +161,7 @@ for tweet in reversed(results):
         if any(word in tweet.user.name for word in ignore_userdata):
             if ARGS.verbose > 0:
                 print "==========================="
-                print "Skip, ignore_userdata"
+                print "Skip, ignore_userdata in name"
                 print tweet.user.name, ", ", tweet.user.description
                 print "==========================="
             continue;
@@ -177,7 +177,7 @@ for tweet in reversed(results):
         if any(word in tweet.user.description for word in ignore_userdata):
             if ARGS.verbose > 0:
                 print "==========================="
-                print "Skip, ignore_userdata"
+                print "Skip, ignore_userdata in bio"
                 print tweet.user.name, ", ", tweet.user.description
                 print "==========================="
             continue;
