@@ -9,7 +9,7 @@ except:
     print "Error loading credentials.py. See credentials.example.py"
     exit()
  
-import tweepy, argparse, math
+import tweepy, argparse, math, sys, os
 from datetime import datetime
 import sqlite3 as lite
 from argparse import RawTextHelpFormatter
@@ -99,28 +99,113 @@ check_rate_limit()
 if ARGS.verbose > 0:
     print "================================"
 
-results = api.search(q="but \"tell anyone\" don't OR dont", count=1, result_type="recent", since_id=since_id, include_entities=False)
+# some words that are often used by bots and we want to ignore
+ignore_words = ["sensei", "kale"]
+# some words to ignore in the username or user description
+ignore_userdata = ["bot"]
+
+#since_id = 888300813889802240
+results = api.search(q="but \"tell anyone\" don't OR dont", count=50, result_type="recent", since_id=since_id, include_entities=False)
 last_id = None
+if ARGS.verbose > 0:
+    print "Possible tweets: ", len(results)
+
 for tweet in reversed(results):
+    #print "---------------------"    
+    #print "Try tweet ", tweet.id
+    #print "---------------------"    
+    # skip retweets retweets
     try:
         if tweet.retweeted_status:
-            continue # skip retweets retweets
-    except:
-        pass;
-
-    try:
-        if tweet.possibly_sensitive:
-            continue # skip sensitive tweets (no porn)
-    except:
+            if ARGS.verbose > 2:
+                print "==> Skip, retweet"
+            continue
+    except AttributeError:
+        # means retweeted_status does not exist, so we can pas
         pass
 
-    if ARGS.verbose > 0:
-        print "==> ", tweet.text
+    #print "no retweet"
+    #except Exception as e:
+    #    exc_type, exc_obj, exc_tb = sys.exc_info()
+    #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    #    print(exc_type, fname, exc_tb.tb_lineno)
+    #    continue
+
+    # skip sensitive tweets (no porn)
     try:
-        api.retweet(tweet.id)
-	last_id = tweet.id
+        if tweet.possibly_sensitive:
+            if ARGS.verbose > 2:
+                print "Skip ==> sensitive"
+            continue
+    except AttributeError:
+        # means possible_sensitive does not exist, so we can pass
+        pass
+
+    #print "not sensitive"
+    # skip tweets containing certain keywords
+    try:
+        if any(word in tweet.text for word in ignore_words):
+            if ARGS.verbose > 0:
+                print "==========================="
+                print "Skip, ignore_words"
+                print tweet.text
+                print "==========================="
+            continue
     except:
         continue
+
+    #print "no ignore words"
+
+    # skip tweets by users with certain keywords in name or bio
+    try:
+        if any(word in tweet.user.name for word in ignore_userdata):
+            if ARGS.verbose > 0:
+                print "==========================="
+                print "Skip, ignore_userdata"
+                print tweet.user.name, ", ", tweet.user.description
+                print "==========================="
+            continue;
+    except AttributeError:
+        # means this data does not exist, so we can passs
+        pass
+    except Exception, e: #not sure when we'll hit this
+        print "exception on ignore_userdata 1"
+        continue
+
+    # skip tweets by users with certain keywords in name or bio
+    try:
+        if any(word in tweet.user.description for word in ignore_userdata):
+            if ARGS.verbose > 0:
+                print "==========================="
+                print "Skip, ignore_userdata"
+                print tweet.user.name, ", ", tweet.user.description
+                print "==========================="
+            continue;
+    except AttributeError:
+        # means this data does not exist, so we can passs
+        pass
+    except Exception, e: #not sure when we'll hit this
+        print "exception on ignore_userdata 2"
+        continue
+   
+    #print "no ignore userdata"
+    #if ARGS.verbose > 0:
+    #    try:
+    #        print "tweet ==> ", tweet.text
+        #except Exception as e:
+        #    exc_type, exc_obj, exc_tb = sys.exc_info()
+        #    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        #    print(exc_type, fname, exc_tb.tb_lineno)
+    #    except:
+    #        print "some exception in the end"
+    #        continue
+    
+    try:
+        api.retweet(tweet.id)
+        last_id = tweet.id
+        break
+    except:
+        pass
 
 if last_id !=  None:
     with con:
