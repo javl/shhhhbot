@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-try:
-    # get credentials from credentials.py
-    from credentials import consumer_key, consumer_secret, access_token, access_token_secret
-
-except:
-    print "Error loading credentials.py. See credentials.example.py"
-    exit()
-
 import tweepy, argparse, math, sys, os
 from datetime import datetime
 import sqlite3 as lite
 from argparse import RawTextHelpFormatter
 
-PARSER = argparse.ArgumentParser(prog='nawscraper', description='''Twitter NAW scraper''',
+# some words that are often used by bots and we want to ignore
+ignore_words = ["sensei", "kale"]
+# some words to ignore in the username or user description
+ignore_userdata = ["bot", "lissa"]
+
+try:
+    # get credentials from credentials.py
+    from credentials import consumer_key, consumer_secret, access_token, access_token_secret
+except:
+    print "Error loading credentials.py. See credentials.example.py"
+    exit(1)
+
+PARSER = argparse.ArgumentParser(prog='shhhhBot', description='''Twitter bot retweeting secret tweets''',
 formatter_class=RawTextHelpFormatter)
 
-PARSER.add_argument('-d', dest="drop_database", action='store_true',\
-help="Drop the database.")
-PARSER.add_argument('-v', dest="verbose", action='count',\
-help="Verbose; can be used up to 3 times to set the verbose level.")
-PARSER.add_argument('--version', action='version', version='%(prog)s version 1.1',\
-help="Show program's version number and exit")
+PARSER.add_argument('-d', dest="drop_database", action='store_true', help="Drop the database.")
+PARSER.add_argument('-v', dest="verbose", action='count', help="Verbose; can be used up to 3 times to set the verbose level.")
+PARSER.add_argument('--version', action='version', version='%(prog)s version 1.1', help="Show program's version number and exit")
 ARGS = PARSER.parse_args()
 
 con = lite.connect('/home/javl/twitterbots/shhhhbot/info.sqlite')
@@ -91,17 +92,7 @@ def check_rate_limit():
             print "Waiting for rate limit to clear."
         exit()
 
-
-
 check_rate_limit()
-
-if ARGS.verbose > 0:
-    print "================================"
-
-# some words that are often used by bots and we want to ignore
-ignore_words = ["sensei", "kale"]
-# some words to ignore in the username or user description
-ignore_userdata = ["bot"]
 
 #since_id = 888300813889802240
 # Find tweets with the sentence, excluding retweets, excluding unsafe tweets
@@ -112,11 +103,11 @@ if ARGS.verbose > 0: print "Number of possible tweets to use: ", len(results)
 for tweet in reversed(results):
     # skip tweets containing certain keywords
     try:
-        if any(word in tweet.text for word in ignore_words):
+        if any(word in tweet.text.lower() for word in ignore_words):
             if ARGS.verbose > 0:
                 print "==========================="
                 print "Skip because of keywords: "
-                print tweet.text
+                print tweet.text.encode('utf-8')
                 print "==========================="
             continue
     except:
@@ -124,11 +115,11 @@ for tweet in reversed(results):
 
     # skip tweets by users with certain keywords in name or bio
     try:
-        if any(word in (tweet.user.name+tweet.user.description) for word in ignore_userdata):
+        if any(word in (tweet.user.name+tweet.user.description+tweet.use.screen_name.lower())  for word in ignore_userdata):
             if ARGS.verbose > 0:
                 print "==========================="
                 print "Skip, ignore_userdata in name"
-                print tweet.user.name, ", ", tweet.user.description
+                print tweet.user.name.encode('utf-8'), ", ", tweet.user.description.encode('utf-8')
                 print "==========================="
             continue;
     except AttributeError:
@@ -139,17 +130,15 @@ for tweet in reversed(results):
         continue
 
     if ARGS.verbose > 0:
-        print "selected tweet from",tweet.user.name
-        print tweet.text
-        break
+        print "selected tweet from",tweet.user.name.encode('utf-8')
+        print tweet.text.encode('utf-8')
 
     try:
+        print "try retweet"
         api.retweet(tweet.id)
         last_id = tweet.id
-        break
-    except:
-        pass
-
-if last_id !=  None:
-    with con:
         cur.execute("UPDATE checks SET since_id=?", (last_id,))
+        break
+    except Exception, e:
+        print "error: ", e
+        pass
