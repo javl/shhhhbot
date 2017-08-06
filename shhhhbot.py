@@ -100,7 +100,8 @@ results = api.search(q="but \"tell anyone\" don't OR dont -filter:retweets filte
 last_id = None
 if ARGS.verbose > 0: print "Number of possible tweets to use: ", len(results)
 
-for tweet in reversed(results):
+#for tweet in reversed(results):
+for tweet in results:
     # skip tweets containing certain keywords
     try:
         if any(word in tweet.text.lower() for word in ignore_words):
