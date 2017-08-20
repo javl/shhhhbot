@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import tweepy, argparse, math, sys, os
+import tweepy, argparse, math, sys, os, json
 from datetime import datetime
 import sqlite3 as lite
 from argparse import RawTextHelpFormatter
 
-# some words that are often used by bots and we want to ignore
-ignore_words = ["sensei", "kale"]
+
+# Below filters are added manually whenever I find shhhhbot retweeting the same
+# user too often. This happens a lot with other bots that keep repeating themselves,
+# especially a lot of these anime character bots do this a lot
+  
+# some words that are often used by bots and we want to ignore in the text of the tweet itself
+ignore_words = ["sensei", "kale", "minions"]
 # some words to ignore in the username or user description
-ignore_userdata = ["bot", "lissa"]
+ignore_userdata = ["bot", "lissa", "shuzohe", "monkebooks", "actualtangerine", "tori_posi","positive_noboru", "CloudianCutie"]
 
 try:
     # get credentials from credentials.py
@@ -100,11 +105,11 @@ results = api.search(q="but \"tell anyone\" don't OR dont -filter:retweets filte
 last_id = None
 if ARGS.verbose > 0: print "Number of possible tweets to use: ", len(results)
 
-#for tweet in reversed(results):
-for tweet in results:
+# sort tweets old to new
+for tweet in reversed(results):
     # skip tweets containing certain keywords
     try:
-        if any(word in tweet.text.lower() for word in ignore_words):
+        if any(word.lower() in tweet.text.lower() for word in ignore_words):
             if ARGS.verbose > 0:
                 print "==========================="
                 print "Skip because of keywords: "
@@ -116,7 +121,8 @@ for tweet in results:
 
     # skip tweets by users with certain keywords in name or bio
     try:
-        if any(word in (tweet.user.name+tweet.user.description+tweet.use.screen_name.lower())  for word in ignore_userdata):
+        combined = tweet.user.name + tweet.user.description + tweet.user.screen_name
+        if any(word.lower() in combined.lower() for word in ignore_userdata):
             if ARGS.verbose > 0:
                 print "==========================="
                 print "Skip, ignore_userdata in name"
@@ -135,11 +141,15 @@ for tweet in results:
         print tweet.text.encode('utf-8')
 
     try:
-        print "try retweet"
+        if ARGS.verbose > 2: print "try retweet"
         api.retweet(tweet.id)
         last_id = tweet.id
         cur.execute("UPDATE checks SET since_id=?", (last_id,))
         break
+    except tweepy.TweepError as e:
+        if ARGS.verbose > 2:
+            print e
+            #e.message[0]['code']
     except Exception, e:
-        print "error: ", e
+        print "Uncaught exception: ", e
         pass
