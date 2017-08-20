@@ -14,7 +14,7 @@ from argparse import RawTextHelpFormatter
 # some words that are often used by bots and we want to ignore in the text of the tweet itself
 ignore_words = ["sensei", "kale", "minions"]
 # some words to ignore in the username or user description
-ignore_userdata = ["bot", "lissa", "shuzohe", "monkebooks", "actualtangerine", "tori_posi","positive_noboru", "CloudianCutie"]
+ignore_userdata = ["bot", "lissa", "shuzohe", "monkebooks", "actualtangerine", "tori_posi","positive_noboru", "CloudianCutie", "ArtyLetters"]
 
 try:
     # get credentials from credentials.py
