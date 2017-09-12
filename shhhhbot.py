@@ -7,14 +7,16 @@ import sqlite3 as lite
 from argparse import RawTextHelpFormatter
 
 
-# Below filters are added manually whenever I find shhhhbot retweeting the same
-# user too often. This happens a lot with other bots that keep repeating themselves,
-# especially a lot of these anime character bots do this a lot
+# Below filters are added manually whenever I find shhhhbot retweeting 
+# the same user too often. This happens a lot with other bots that keep
+# repeating themselves, especially a lot of these anime character bots 
+# do this a lot. Adding those bots by hand is a bit annoying, but seems
+# to be the easiest way.
   
 # some words that are often used by bots and we want to ignore in the text of the tweet itself
 ignore_words = ["sensei", "kale", "minions"]
-# some words to ignore in the username or user description
-ignore_userdata = ["bot", "lissa", "shuzohe", "monkebooks", "actualtangerine", "tori_posi","positive_noboru", "CloudianCutie", "ArtyLetters"]
+# some words to ignore in the username or user description.
+ignore_userdata = ["bot", "KakkoiiPikachu", "lissa", "shuzohe", "monkebooks", "actualtangerine", "tori_posi","positive_noboru", "CloudianCutie", "ArtyLetters", "TinyPatchouli"]
 
 try:
     # get credentials from credentials.py
