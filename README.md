@@ -4,7 +4,6 @@
 
 shhhBot retweets tweets containing the phrase "don't tell anyone, but"
 
-
 #### Usage ####
 Run: `./shhhh.py`
 
