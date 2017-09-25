@@ -10,8 +10,8 @@ from argparse import RawTextHelpFormatter
 # Below filters are added manually whenever I find shhhhbot retweeting 
 # the same user too often. This happens a lot with other bots that keep
 # repeating themselves, especially a lot of these anime character bots 
-# do this a lot. Adding those bots by hand is a bit annoying, but seems
-# to be the easiest way.
+# seem to do this. Adding those bots by hand is a bit annoying, but its
+# an easy way.
   
 # some words that are often used by bots and we want to ignore in the text of the tweet itself
 ignore_words = ["sensei", "kale", "minions"]
